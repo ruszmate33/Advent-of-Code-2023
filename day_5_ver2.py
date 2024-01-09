@@ -1,4 +1,54 @@
-import collections
+from functools import reduce
+
+def get_processed_ranges(*ranges):
+    def process_ranges(range1, range2):
+        if range2[0] in range1 or range2[-1] in range1:
+            if range2[0] < range1[0]:
+                range1 = range(range2[0], range1[-1] + 1)
+            if range2[-1] > range1[-1]:
+                range1 = range(range1[0], range2[-1] + 1)
+            return (range1,)
+        return range1, range2
+    return reduce(lambda x, y: process_ranges(x, y))
+
+def process_ranges(range1, range2):
+    if (range2[0] in range1 or range2[-1] in range1 or range1[0] in range2 or range1[-1] in range2):
+        start = min(range1[0], range2[0])
+        end = max(range1[-1], range2[-1])
+        return range(start, end + 1)
+    return range1, range2
+
+def merge_ranges(ranges):
+    # Sort the ranges by their start values
+    sorted_ranges = sorted(ranges, key=lambda r: r.start)
+
+    # Initialize the merged ranges list
+    merged_ranges = []
+
+    # Iterate through the sorted ranges and merge overlapping ranges
+    for current_range in sorted_ranges:
+        if not merged_ranges:
+            # If merged_ranges is empty, add the current range
+            merged_ranges.append(current_range)
+        else:
+            # Get the last range in merged_ranges
+            last_range = merged_ranges[-1]
+
+            # Check if the current range overlaps with the last range
+            if current_range.start <= last_range.stop:
+                # Merge the ranges by updating the end of the last range
+                merged_ranges[-1] = range(last_range.start, max(last_range.stop, current_range.stop))
+            else:
+                # No overlap, add the current range as a new range
+                merged_ranges.append(current_range)
+
+    return merged_ranges
+
+# Example usage
+# example_ranges = [range(1, 5), range(4, 8), range(10, 15), range(12, 20), range(21, 25)]
+# merged_ranges = merge_ranges(example_ranges)
+# merged_ranges
+
 
 SEED_TO_SOIL = (
 """50 98 2
@@ -64,19 +114,6 @@ def get_list_nums_ranges(puzzle_input):
     list_nums_ranges = puzzle_input.split('\n')[1:]
     return list_nums_ranges
 
-def build_map(num_num_range: list[str]):
-    d = DefaultToSameValueDict()
-    # print(f'{num_num_range=}')
-    for el in num_num_range:
-        el = el.split(' ')
-        # print(f'{el=}')
-        for i in range(int(el[2])):
-            d[int(el[1]) + i] = int(el[0]) + i
-    return d
-
-def build_map_from_input(puzzle_input):
-    return build_map(get_list_nums_ranges(puzzle_input))
-
 def main():
     with open('input5.txt') as f:
         puzzle_input = f.read().split('\n\n')
@@ -86,13 +123,23 @@ def main():
 
 
         seed_input = [int(seed) for seed in puzzle_input[0].split(' ')[1:] if seed]
+        print(f'{seed_input=}')
+        print(f'{len(seed_input)=}')
         seed_ranges = []
         for seed_start, seed_length in zip(seed_input[::2], seed_input[1::2]):
             # print(f'{seed_start=}, {seed_length=}')
             seed_ranges.append(range(seed_start, seed_start + seed_length))
-        print(f'{seed_input=}')
         print(f'{seed_ranges=}')
+        print(f'{len(seed_ranges)=}')
+        common_seeds = merge_ranges(seed_ranges)
+        # first_range = seed_ranges[0]
+        # for r in seed_ranges[1:]:
+        #     common_seeds.append(process_ranges(first_range, r))
+        print(f'{len(common_seeds)=}')
+
+        print(f'{common_seeds=}')
         print('seed_input: done')
+        
         
         def create_function(puzzle_input, name):
             # 50 98 2
@@ -131,28 +178,27 @@ def main():
             return get_location(get_hum(get_temp(get_light(get_water(get_fertilizer(get_soil(seed)))))))
 
 
-        # seed_to_loc = {}
         min_location = None
-        for i, seed_range in enumerate(seed_ranges):
-            # print(f'{seed_range=}')
-            for seed in seed_range:
-                # print(f'{seed=}')
-                # if seed in seed_to_loc:
-                #     continue
-                location = seed_to_location(seed)
-                # seed_to_loc[seed] = location
-                if min_location is None:
-                    min_location = location
-                if location < min_location:
-                    min_location = location
-            print(f'range {i} finished, min so far {min_location}')
+        for i, seed in enumerate(common_seeds):
+            if i % 1000 == 0:
+                print(f'{i} iteration: sofar {min=}')
+            location = seed_to_location(seed)
+            if min_location is None:
+                min_location = location
+            if location < min_location:
+                min_location = location
         print(f'{min_location=}')
-
-        # seeds_to_locations = seeds_to_locations(seed_input)
-        # print('seeds_to_locations calculated')
-        # closest_location = min(seeds_to_locations)
-        # print(f'{closest_location=}')
         
+        # min_location = None
+        # for i, seed_range in enumerate(seed_ranges):
+        #     for seed in seed_range:
+        #         location = seed_to_location(seed)
+        #         if min_location is None:
+        #             min_location = location
+        #         if location < min_location:
+        #             min_location = location
+        #     print(f'range {i} finished, min so far {min_location}')
+        # print(f'{min_location=}')  
 
 if __name__ == '__main__':
     main()
