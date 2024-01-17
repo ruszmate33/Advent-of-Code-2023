@@ -25,9 +25,14 @@ def extrapolate_from_diff_sequences(seqs: list[list[int]]) -> int:
     return sum(seq[-1] for seq in seqs)
 
 
-# def preceeding_values(seqs: list[list[int]]):
-#     for i in range(len(seqs)):
-#         seqs[-1 + i][0]
+def preceeding_value(seqs: list[list[int]]):
+    # for i in range(1, len(seqs) + 1):
+        # print(seqs[-1 + i][0], seqs[-1 + i])
+        # print(seqs[-i][0])
+    starting_values = [seqs[-i][0] for i in range(1, len(seqs) + 1)]
+    print(f'{starting_values=}')
+    back_extrapolated = sequence_differences(starting_values)
+    print(f'{back_extrapolated=}')
 
 
 def main():
@@ -39,9 +44,16 @@ def main():
         for history in TEST_INPUT.split('\n'):
             sequences_for_extrapolation = create_sequence_for_extrapolation(history)
             print(f'{sequences_for_extrapolation=}')
-            next_value = extrapolate_from_diff_sequences(sequences_for_extrapolation)
-            sum_next_values += next_value
-        print(sum_next_values)
+            
+            # part 1 
+            # next_value = extrapolate_from_diff_sequences(sequences_for_extrapolation)
+            # sum_next_values += next_value
+
+            # part 2
+            preceeding_value(sequences_for_extrapolation)
+
+
+        # print(sum_next_values)
 
 
 if __name__ == '__main__':
